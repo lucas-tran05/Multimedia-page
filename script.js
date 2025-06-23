@@ -1,5 +1,4 @@
-
-const courseSlides = [
+const courseSlidesVI = [
     {
         video: 'vid_course_1.mp4',
         title: 'Video ngắn "Speak Up"',
@@ -34,10 +33,70 @@ const courseSlides = [
     }
 ];
 
+const courseSlidesEN = [
+    {
+        video: 'vid_course_1.mp4',
+        title: 'Short video "Speak Up"',
+        group: 'Student group: Class of D20',
+        subject: 'Subject: Media Project Management',
+        desc: 'With the power of multimedia communication, students today don\'t just learn - they create the future. Don\'t fear challenges - keep creating, turn dreams into reality, and spread your own message to the world.',
+        poster: 'thumb_speakup.png'
+    },
+    {
+        video: 'vid_course_2.mp4',
+        title: 'Short video "Who Will I Become If I Choose Multimedia Communication at PTIT?"',
+        group: 'Student group: Class of D21',
+        subject: 'Subject: Multimedia Scriptwriting',
+        desc: 'As you begin a new journey, who do you want to become? With a high-quality, practice-oriented program and a team of experienced lecturers, PTIT’s Multimedia Communication program is where creative dreams are nurtured and brought to life.',
+        poster: 'thumb_toiselaai.png'
+    },
+    {
+        video: 'vid_course_3.mp4',
+        title: 'Project "A Day Pressed on Paper"',
+        group: 'Student group: Class of D21',
+        subject: 'Subject: Multimedia Graphic Design Applications',
+        desc: 'The project "A Day Pressed on Paper" was created to raise awareness and spread meaningful messages about self-love — especially to young people. When you live fully, those values, memories, and moments of happiness will be gently pressed into your life’s journey, staying with you forever.',
+        poster: 'thumb_ngaydongtrengiay.png'
+    },
+    {
+        video: 'vid_course_4.mp4',
+        title: 'Project "The Tireless Wings of the Night"',
+        group: 'Student group: Class of D21',
+        subject: 'Subject: Audio & Video Production Applications',
+        desc: 'While the city sleeps, life continues quietly at Long Biên Market — where hardworking women porters carry the extraordinary strength of resilience. This project is a heartfelt tribute and a deeply human perspective on the beauty of labor — raw, humble, yet profoundly moving.',
+        poster: 'thumb_nhuncanhchim.png'
+    }
+];
+
+// Xác định ngôn ngữ hiện tại dựa trên URL hoặc thuộc tính lang
+function getCurrentLanguage() {
+    const currentPath = window.location.pathname;
+    const htmlLang = document.documentElement.lang;
+
+    // Kiểm tra từ URL trước
+    if (currentPath.includes('index-en.html') || currentPath.includes('/en/')) {
+        return 'en';
+    } else if (currentPath.includes('index.html') || htmlLang === 'vi') {
+        return 'vi';
+    }
+
+    // Mặc định là tiếng Việt
+    return 'vi';
+}
+
+// Chọn dữ liệu phù hợp dựa trên ngôn ngữ
+const currentLang = getCurrentLanguage();
+const courseSlides = currentLang === 'en' ? courseSlidesEN : courseSlidesVI;
+
 // ======================================
+// LANGUAGE SWITCHING LOGIC
+// ======================================
+
 function toggleDropdown() {
     const dropdown = document.getElementById('lang-dropdown');
     const arrow = document.getElementById('dropdown-arrow');
+
+    if (!dropdown || !arrow) return;
 
     if (dropdown.classList.contains('opacity-0')) {
         dropdown.classList.remove('opacity-0', 'invisible');
@@ -49,108 +108,188 @@ function toggleDropdown() {
         arrow.style.transform = 'rotate(0deg)';
     }
 }
+
+// Hàm chuyển đổi ngôn ngữ chính
+function switchLanguage(targetLang) {
+    const currentLang = getCurrentLanguage();
+
+    // Nếu đã ở ngôn ngữ được chọn thì không làm gì
+    if (currentLang === targetLang) return;
+
+    // Xác định URL đích
+    let targetUrl;
+    if (targetLang === 'en') {
+        targetUrl = 'index-en.html';
+    } else {
+        targetUrl = 'index.html';
+    }
+
+    // Chuyển hướng
+    window.location.href = targetUrl;
+}
+
+// Wrapper functions cho các nút trong dropdown
 function setLang(lang) {
     if (lang === 'ENG') {
-        window.location.href = 'index-en.html';
+        switchLanguage('en');
     } else if (lang === 'VI') {
-        window.location.href = 'index.html';
+        switchLanguage('vi');
     }
-
-    document.getElementById('selected-lang').textContent = lang;
 }
 
+// Deprecated - giữ lại để tương thích
 function setLangWithStorage(lang) {
-    if (lang === 'ENG') {
-        window.location.href = 'index-en.html';
-    } else if (lang === 'VI') {
-        window.location.href = 'index.html';
-    }
+    setLang(lang);
 }
 
+// Xử lý sự kiện click bên ngoài dropdown
 document.addEventListener('click', function (event) {
     const dropdown = document.getElementById('lang-dropdown');
-    const button = event.target.closest('.group');
+    const langButton = event.target.closest('.group');
 
-    if (!button) {
-        dropdown.classList.add('hidden');
+    if (!langButton && dropdown) {
+        dropdown.classList.add('opacity-0', 'invisible');
+        dropdown.classList.remove('opacity-100', 'visible');
+
+        const arrow = document.getElementById('dropdown-arrow');
+        if (arrow) {
+            arrow.style.transform = 'rotate(0deg)';
+        }
     }
 });
 
-document.querySelector('.group').addEventListener('mouseenter', function () {
-    document.getElementById('lang-dropdown').classList.remove('hidden');
+// Xử lý hover cho dropdown (nếu có)
+document.addEventListener('DOMContentLoaded', function () {
+    const langGroup = document.querySelector('.group');
+
+    if (langGroup) {
+        langGroup.addEventListener('mouseenter', function () {
+            const dropdown = document.getElementById('lang-dropdown');
+            if (dropdown) {
+                dropdown.classList.remove('hidden');
+            }
+        });
+
+        langGroup.addEventListener('mouseleave', function () {
+            const dropdown = document.getElementById('lang-dropdown');
+            if (dropdown) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
 });
 
-document.querySelector('.group').addEventListener('mouseleave', function () {
-    document.getElementById('lang-dropdown').classList.add('hidden');
-});
 // ======================================
+// COURSE SLIDER LOGIC
+// ======================================
+
 let currentCourse = 0;
 let isSliding = false;
+
 function renderCourseSlide(idx, direction = 0) {
     if (isSliding) return;
     isSliding = true;
+
     const wrap = document.querySelector('.course-slide-wrap');
+    if (!wrap) {
+        isSliding = false;
+        return;
+    }
+
     const oldSlide = document.getElementById('course-slide');
     const newSlide = document.createElement('div');
     newSlide.className = 'flex items-center justify-center gap-12 rounded-3xl course-slide-anim';
     newSlide.id = 'course-slide';
+
     if (direction === 1) newSlide.classList.add('slide-in-right');
     else if (direction === -1) newSlide.classList.add('slide-in-left');
     else newSlide.classList.add('slide-active');
+
     const data = courseSlides[idx];
     newSlide.innerHTML = `
-                <div class='flex-shrink-0 w-[622px] h-[350px] flex items-center justify-center bg-black rounded-2xl'>
-                    <video controls class='w-full h-full object-contain rounded-2xl'  poster='${data.poster}'>
-                        <source src='${data.video}' type='video/mp4'>
-                        Trình duyệt của bạn không hỗ trợ video.
-                    </video>
-                </div>
-                <div class='text-left max-w-xl'>
-                    <h3 class='text-white text-4xl font-extrabold mb-4'>${data.title}</h3>
-                    <div class='text-white text-xl font-semibold mb-2'>${data.group}</div>
-                    <div class='text-white text-lg mb-2'>${data.subject}</div>
-                    <p class='text-white text-lg leading-relaxed font-base'>${data.desc}</p>
-                </div>
-            `;
+        <div class='flex-shrink-0 w-[622px] h-[350px] flex items-center justify-center bg-black rounded-2xl'>
+            <video controls class='w-full h-full object-contain rounded-2xl' poster='${data.poster}'>
+                <source src='${data.video}' type='video/mp4'>
+                ${currentLang === 'en' ? 'Your browser does not support video.' : 'Trình duyệt của bạn không hỗ trợ video.'}
+            </video>
+        </div>
+        <div class='text-left max-w-xl'>
+            <h3 class='text-white text-4xl font-extrabold mb-4'>${data.title}</h3>
+            <div class='text-white text-xl font-semibold mb-2'>${data.group}</div>
+            <div class='text-white text-lg mb-2'>${data.subject}</div>
+            <p class='text-white text-lg leading-relaxed font-base'>${data.desc}</p>
+        </div>
+    `;
+
     wrap.appendChild(newSlide);
+
     setTimeout(() => {
         if (direction === 1) {
             newSlide.classList.remove('slide-in-right');
             newSlide.classList.add('slide-active');
-            oldSlide.classList.add('slide-out-left');
+            if (oldSlide) oldSlide.classList.add('slide-out-left');
         } else if (direction === -1) {
             newSlide.classList.remove('slide-in-left');
             newSlide.classList.add('slide-active');
-            oldSlide.classList.add('slide-out-right');
+            if (oldSlide) oldSlide.classList.add('slide-out-right');
         }
     }, 10);
+
     setTimeout(() => {
-        if (wrap.contains(oldSlide)) wrap.removeChild(oldSlide);
+        if (oldSlide && wrap.contains(oldSlide)) {
+            wrap.removeChild(oldSlide);
+        }
         isSliding = false;
     }, 500);
 }
-document.getElementById('course-prev').onclick = function () {
-    const prev = (currentCourse - 1 + courseSlides.length) % courseSlides.length;
-    renderCourseSlide(prev, -1);
-    currentCourse = prev;
-};
-document.getElementById('course-next').onclick = function () {
-    const next = (currentCourse + 1) % courseSlides.length;
-    renderCourseSlide(next, 1);
-    currentCourse = next;
-};
-window.addEventListener('DOMContentLoaded', () => renderCourseSlide(currentCourse, 0));
+
+// Course navigation
+document.addEventListener('DOMContentLoaded', function () {
+    const prevBtn = document.getElementById('course-prev');
+    const nextBtn = document.getElementById('course-next');
+
+    if (prevBtn) {
+        prevBtn.onclick = function () {
+            const prev = (currentCourse - 1 + courseSlides.length) % courseSlides.length;
+            renderCourseSlide(prev, -1);
+            currentCourse = prev;
+        };
+    }
+
+    if (nextBtn) {
+        nextBtn.onclick = function () {
+            const next = (currentCourse + 1) % courseSlides.length;
+            renderCourseSlide(next, 1);
+            currentCourse = next;
+        };
+    }
+});
+
+// ======================================
+// HEADER SCROLL LOGIC
+// ======================================
+
 let lastScrollTop = 0;
-const header = document.querySelector('header');
+
 window.addEventListener("scroll", function () {
+    const header = document.querySelector('header');
+    if (!header) return;
+
     let st = window.pageYOffset || document.documentElement.scrollTop;
+
     if (st > lastScrollTop && st > header.offsetHeight) {
         header.style.top = `-${header.offsetHeight}px`;
     } else {
         header.style.top = "0";
     }
+
     lastScrollTop = st <= 0 ? 0 : st;
 }, false);
+
+// ======================================
+// CLUB SLIDER LOGIC
+// ======================================
+
 const clubVideos = [
     { src: 'vid_club_1.mp4', poster: 'thumb_1.png' },
     { src: 'vid_club_2.mp4', poster: 'thumb_2.png' },
@@ -158,17 +297,21 @@ const clubVideos = [
     { src: 'vid_club_4.mp4', poster: 'thumb_4.png' },
     { src: 'vid_club_5.mp4', poster: 'thumb_5.png' }
 ];
+
 let clubCurrent = 0;
 let isClubSliding = false;
+
 function renderClubSlide(idx) {
     const total = clubVideos.length;
-    // Lấy 1 video trước, 1 video sau và video hiện tại
     const getIdx = (offset) => (idx + offset + total) % total;
     const indices = [getIdx(-1), idx, getIdx(1)];
+
     const wrap = document.getElementById('club-slide');
+    if (!wrap) return;
+
     wrap.innerHTML = indices.map((i, pos) => {
-        // Vị trí: 0,2 là nhỏ mờ; 1 là lớn rõ
         let size = '', opacity = '', extra = '';
+
         if (pos === 0 || pos === 2) {
             size = 'w-[320px] h-[180px]';
             opacity = 'opacity-60 scale-95';
@@ -177,16 +320,19 @@ function renderClubSlide(idx) {
             opacity = 'opacity-100 scale-100';
             extra = 'border border-orange-200 shadow-2xl';
         }
+
         return `
-                    <div class="club-flex-slide ${size} ${opacity} bg-white/80 rounded-2xl shadow-lg flex items-center justify-center mx-2 ${extra}">
-                        <video src="${clubVideos[i].src}" poster="${clubVideos[i].poster}" ${pos === 1 ? 'controls' : ''} class="w-full h-full object-contain rounded-2xl ${pos !== 1 ? 'pointer-events-none' : ''}" ${pos !== 1 ? 'tabindex="-1"' : ''}></video>
-                    </div>
-                `;
+            <div class="club-flex-slide ${size} ${opacity} bg-white/80 rounded-2xl shadow-lg flex items-center justify-center mx-2 ${extra}">
+                <video src="${clubVideos[i].src}" poster="${clubVideos[i].poster}" ${pos === 1 ? 'controls' : ''} class="w-full h-full object-contain rounded-2xl ${pos !== 1 ? 'pointer-events-none' : ''}" ${pos !== 1 ? 'tabindex="-1"' : ''}></video>
+            </div>
+        `;
     }).join('');
 }
+
 function clubSlide(direction) {
     if (isClubSliding) return;
     isClubSliding = true;
+
     setTimeout(() => {
         clubCurrent = direction === 1
             ? (clubCurrent + 1) % clubVideos.length
@@ -195,12 +341,52 @@ function clubSlide(direction) {
         isClubSliding = false;
     }, 400);
 }
-document.getElementById('club-prev').onclick = function () {
-    clubSlide(-1);
-};
-document.getElementById('club-next').onclick = function () {
-    clubSlide(1);
-};
-window.addEventListener('DOMContentLoaded', () => renderClubSlide(clubCurrent));
 
+// Club navigation
+document.addEventListener('DOMContentLoaded', function () {
+    const clubPrevBtn = document.getElementById('club-prev');
+    const clubNextBtn = document.getElementById('club-next');
 
+    if (clubPrevBtn) {
+        clubPrevBtn.onclick = function () {
+            clubSlide(-1);
+        };
+    }
+
+    if (clubNextBtn) {
+        clubNextBtn.onclick = function () {
+            clubSlide(1);
+        };
+    }
+});
+
+// Button back to top
+document.addEventListener('DOMContentLoaded', function () {
+    const backToTopButton = document.getElementById('back-to-top');
+
+    if (backToTopButton) {
+        window.addEventListener('scroll', function () {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.add('show');
+            } else {
+                backToTopButton.classList.remove('show');
+            }
+        });
+
+        backToTopButton.addEventListener('click', function () {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+});
+
+// ======================================
+// INITIALIZATION
+// ======================================
+
+window.addEventListener('DOMContentLoaded', () => {
+    renderCourseSlide(currentCourse, 0);
+    renderClubSlide(clubCurrent);
+});
